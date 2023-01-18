@@ -1,0 +1,3 @@
+[submodule "testc"]
+	path = testc
+	url = https://github.com/NuclearPhone/testc.git
