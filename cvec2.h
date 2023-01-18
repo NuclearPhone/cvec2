@@ -6,10 +6,6 @@
 a single-header vector library
 written in pure C
 
-make sure to call cvec2_set_allocator()
-with proper arguments at the start of a
-program to make sure that the library works
-
 */
 
 #include <stddef.h>
