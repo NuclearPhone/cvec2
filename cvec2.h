@@ -17,14 +17,14 @@ struct cvec2_allocator_set {
     void *(*realloc)(void *ptr, size_t new_size);
 };
 
-typedef struct {
+struct cvec2 {
     uint8_t *ptr;
     size_t len;
     size_t cap;
     size_t elem_size;
 
     struct cvec2_allocator_set allocator_set;
-} cvec2_t;
+};
 
 #undef CVEC2_EXPORT
 #ifdef CVEC2_INLINE
@@ -44,52 +44,53 @@ typedef struct {
 /* -- CONSTRUCTORS -- */
 
 // initialize a vector, using the standard library allocator
-CVEC2_EXPORT cvec2_t cvec2_init_default(size_t member_size);
+CVEC2_EXPORT struct cvec2 cvec2_init_default(size_t member_size);
 
 // initialize a vector, using a custom set of allocator functions
-CVEC2_EXPORT cvec2_t cvec2_init_alloc(struct cvec2_allocator_set set,
-                                      size_t member_size);
+CVEC2_EXPORT struct cvec2 cvec2_init_alloc(struct cvec2_allocator_set set,
+                                           size_t member_size);
 
 // destroy an allocator, and free the memory held by it
 // does nothing when called on an already destroyed vector
-CVEC2_EXPORT void cvec2_destroy(cvec2_t *vector);
+CVEC2_EXPORT void cvec2_destroy(struct cvec2 *vector);
 
 /* -- MEMORY MANAGEMENT -- */
 
 // repeatedly grows the vectors capacity by multiplying its capacity by
 // CVEC2_DEFAULT_GROWTH, until the vectors capacity >= cap
-CVEC2_EXPORT void cvec2_grow(cvec2_t *vector, size_t cap);
+CVEC2_EXPORT void cvec2_grow(struct cvec2 *vector, size_t cap);
 
 // resize the capacity of the vector, destructively
-CVEC2_EXPORT void cvec2_resize(cvec2_t *vector, size_t size);
+CVEC2_EXPORT void cvec2_resize(struct cvec2 *vector, size_t size);
 
 // resize the capacity of the vector to be at least size
 // does not grow the vector past size unless it is already greater than size
-CVEC2_EXPORT void cvec2_reserve(cvec2_t *vector, size_t size);
+CVEC2_EXPORT void cvec2_reserve(struct cvec2 *vector, size_t size);
 
 /* -- MUTATING FUNCTIONS -- */
 
 // push a value onto the end of a vector
-CVEC2_EXPORT void cvec2_push(cvec2_t *vector, void *data);
+CVEC2_EXPORT void cvec2_push(struct cvec2 *vector, void *data);
 
 // pop a value into a location of memory
-CVEC2_EXPORT void cvec2_pop(cvec2_t *vector, void *into);
+CVEC2_EXPORT void cvec2_pop(struct cvec2 *vector, void *into);
 
 // insert a value into a vector, preserving order,
 // at a specific index specified by whence
-CVEC2_EXPORT void cvec2_insert(cvec2_t *vector, void *from, size_t whence);
+CVEC2_EXPORT void cvec2_insert(struct cvec2 *vector, void *from, size_t whence);
 
 // insert a value into a vector, not preserving order,
 // at a specifid index specified by whence
 // faster than regular insert
-CVEC2_EXPORT void cvec2_insert_fast(cvec2_t *vector, void *from, size_t whence);
+CVEC2_EXPORT void cvec2_insert_fast(struct cvec2 *vector, void *from,
+                                    size_t whence);
 
 // remove a value at a specified location, preserving order
-CVEC2_EXPORT void cvec2_remove(cvec2_t *vector, size_t whence);
+CVEC2_EXPORT void cvec2_remove(struct cvec2 *vector, size_t whence);
 
 // remove a value at a specified location, not preserving order
 // faster than regular remove
-CVEC2_EXPORT void cvec2_remove_fast(cvec2_t *vector, size_t whence);
+CVEC2_EXPORT void cvec2_remove_fast(struct cvec2 *vector, size_t whence);
 
 /* -- HELPER MACROS -- */
 
@@ -114,8 +115,8 @@ static inline void cvec2_memcpy(uint8_t *to, uint8_t *from, size_t size) {
 
 /* -- CONSTRUCTORS -- */
 
-CVEC2_EXPORT cvec2_t cvec2_init_default(size_t size) {
-    return (cvec2_t){
+CVEC2_EXPORT struct cvec2 cvec2_init_default(size_t size) {
+    return (struct cvec2){
         .ptr = malloc(CVEC2_DEFAULT_CAP * size),
         .cap = CVEC2_DEFAULT_CAP,
         .len = 0,
@@ -124,9 +125,9 @@ CVEC2_EXPORT cvec2_t cvec2_init_default(size_t size) {
     };
 }
 
-CVEC2_EXPORT cvec2_t cvec2_init_alloc(struct cvec2_allocator_set set,
-                                      size_t member_size) {
-    return (cvec2_t){
+CVEC2_EXPORT struct cvec2 cvec2_init_alloc(struct cvec2_allocator_set set,
+                                           size_t member_size) {
+    return (struct cvec2){
         .ptr = set.alloc(CVEC2_DEFAULT_CAP * member_size),
         .cap = CVEC2_DEFAULT_CAP,
         .len = 0,
@@ -135,7 +136,7 @@ CVEC2_EXPORT cvec2_t cvec2_init_alloc(struct cvec2_allocator_set set,
     };
 }
 
-CVEC2_EXPORT void cvec2_destroy(cvec2_t *vec) {
+CVEC2_EXPORT void cvec2_destroy(struct cvec2 *vec) {
     if (vec->ptr) {
         vec->allocator_set.free(vec->ptr);
         vec->ptr = 0;
@@ -147,19 +148,19 @@ CVEC2_EXPORT void cvec2_destroy(cvec2_t *vec) {
 
 /* -- MEMORY MANAGEMENT -- */
 
-CVEC2_EXPORT void cvec2_grow(cvec2_t *vector, size_t cap) {
+CVEC2_EXPORT void cvec2_grow(struct cvec2 *vector, size_t cap) {
     while (vector->cap < cap)
         vector->cap *= CVEC2_DEFAULT_GROWTH;
     vector->ptr = vector->allocator_set.realloc(
         vector->ptr, vector->cap * vector->elem_size);
 }
 
-CVEC2_EXPORT void cvec2_resize(cvec2_t *vector, size_t size) {
+CVEC2_EXPORT void cvec2_resize(struct cvec2 *vector, size_t size) {
     vector->cap = size;
     vector->ptr = vector->allocator_set.realloc(vector->ptr, size);
 }
 
-CVEC2_EXPORT void cvec2_reserve(cvec2_t *vector, size_t size) {
+CVEC2_EXPORT void cvec2_reserve(struct cvec2 *vector, size_t size) {
     if (vector->cap >= size)
         return;
 
@@ -170,14 +171,14 @@ CVEC2_EXPORT void cvec2_reserve(cvec2_t *vector, size_t size) {
 
 /* -- MUTATING FUNCTIONS -- */
 
-CVEC2_EXPORT void cvec2_push(cvec2_t *vector, void *data) {
+CVEC2_EXPORT void cvec2_push(struct cvec2 *vector, void *data) {
     cvec2_grow(vector, vector->len + 1);
     cvec2_memcpy(&vector->ptr[CVEC2_GET_BYTE_INDEX_OF(vector, vector->len)],
                  data, vector->elem_size);
     vector->len += 1;
 }
 
-CVEC2_EXPORT void cvec2_pop(cvec2_t *vector, void *into) {
+CVEC2_EXPORT void cvec2_pop(struct cvec2 *vector, void *into) {
     cvec2_memcpy(into,
                  &vector->ptr[CVEC2_GET_BYTE_INDEX_OF(vector, vector->len - 1)],
                  vector->elem_size);
@@ -185,7 +186,8 @@ CVEC2_EXPORT void cvec2_pop(cvec2_t *vector, void *into) {
 }
 
 // must preserve order
-CVEC2_EXPORT void cvec2_insert(cvec2_t *vector, void *from, size_t whence) {
+CVEC2_EXPORT void cvec2_insert(struct cvec2 *vector, void *from,
+                               size_t whence) {
     cvec2_grow(vector, vector->len + 1);
 
     // move all elements in front of whence one forward
@@ -204,7 +206,7 @@ CVEC2_EXPORT void cvec2_insert(cvec2_t *vector, void *from, size_t whence) {
     vector->len += 1;
 }
 
-CVEC2_EXPORT void cvec2_insert_fast(cvec2_t *vector, void *from,
+CVEC2_EXPORT void cvec2_insert_fast(struct cvec2 *vector, void *from,
                                     size_t whence) {
     cvec2_grow(vector, vector->len + 1);
 
@@ -216,7 +218,7 @@ CVEC2_EXPORT void cvec2_insert_fast(cvec2_t *vector, void *from,
 }
 
 // must preserve order
-CVEC2_EXPORT void cvec2_remove(cvec2_t *vector, size_t whence) {
+CVEC2_EXPORT void cvec2_remove(struct cvec2 *vector, size_t whence) {
     for (size_t i = whence; i < vector->len; i++)
         cvec2_memcpy(&vector->ptr[CVEC2_GET_BYTE_INDEX_OF(vector, i)],
                      &vector->ptr[CVEC2_GET_BYTE_INDEX_OF(vector, i + 1)],
@@ -224,7 +226,7 @@ CVEC2_EXPORT void cvec2_remove(cvec2_t *vector, size_t whence) {
     vector->len -= 1;
 }
 
-CVEC2_EXPORT void cvec2_remove_fast(cvec2_t *vector, size_t whence) {
+CVEC2_EXPORT void cvec2_remove_fast(struct cvec2 *vector, size_t whence) {
     cvec2_memcpy(&vector->ptr[CVEC2_GET_BYTE_INDEX_OF(vector, whence)],
                  &vector->ptr[CVEC2_GET_BYTE_INDEX_OF(vector, vector->len - 1)],
                  vector->elem_size);

@@ -6,13 +6,13 @@
 #include "cvec2.h"
 
 static const char *create_destroy() {
-    cvec2_t vec = cvec2_init_default(sizeof(int));
+    struct cvec2 vec = cvec2_init_default(sizeof(int));
     cvec2_destroy(&vec);
     return NULL;
 }
 
 static const char *push() {
-    cvec2_t vec = cvec2_init_default(sizeof(int));
+    struct cvec2 vec = cvec2_init_default(sizeof(int));
 
     int data = 4;
     cvec2_push(&vec, &data);
@@ -25,7 +25,7 @@ static const char *push() {
 }
 
 static const char *insert() {
-    cvec2_t vec = cvec2_init_default(sizeof(int));
+    struct cvec2 vec = cvec2_init_default(sizeof(int));
 
     int v0 = 0, v1 = 1, v2 = 2;
     cvec2_push(&vec, &v0);
