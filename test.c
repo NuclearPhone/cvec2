@@ -39,6 +39,53 @@ static const char *insert() {
     return NULL;
 }
 
+static const char *array_append() {
+    struct cvec2 into = cvec2_init_default(sizeof(int));
+    const int from[] = {
+        0, 1, 2, 3, 4,
+    };
+
+    cvec2_append_list(&into, (void *)from, sizeof from / sizeof(int));
+
+    for (size_t i = 0; i < 5; i++)
+        if (CVEC2_GET(&into, int, i) != (int)i)
+            return TESTC_BASIC_ERR;
+
+    cvec2_destroy(&into);
+    return NULL;
+}
+
+static const char *vec_insert() {
+    const int into_init[] = {
+        0,
+        1,
+        4,
+        5,
+    };
+
+    const int from_init[] = {
+        2,
+        3,
+    };
+
+    struct cvec2 into = cvec2_init_default(sizeof(int));
+    struct cvec2 from = cvec2_init_default(sizeof(int));
+
+    cvec2_append_list(&into, (void *)into_init,
+                      sizeof(into_init) / sizeof(int));
+    cvec2_append_list(&from, (void *)from_init,
+                      sizeof(from_init) / sizeof(int));
+
+    cvec2_insert_vec(&into, &from, 2);
+
+    for (size_t i = 0; i < 6; i++)
+        if (CVEC2_GET(&into, int, i) != (int)i)
+            return TESTC_BASIC_ERR;
+
+    cvec2_destroy(&into);
+    return NULL;
+}
+
 static test_t tests[] = {
     (test_t){
         .ptr = create_destroy,
@@ -55,6 +102,18 @@ static test_t tests[] = {
     (test_t){
         .ptr = insert,
         .name = "insert in middle",
+        .desc = "",
+    },
+
+    (test_t){
+        .ptr = array_append,
+        .name = "append to vec from array",
+        .desc = "",
+    },
+
+    (test_t){
+        .ptr = vec_insert,
+        .name = "insert into array from another",
         .desc = "",
     },
 };

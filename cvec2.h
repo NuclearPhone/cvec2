@@ -75,6 +75,9 @@ CVEC2_EXPORT void cvec2_push(struct cvec2 *vector, void *data);
 // pop a value into a location of memory
 CVEC2_EXPORT void cvec2_pop(struct cvec2 *vector, void *into);
 
+CVEC2_EXPORT void cvec2_append(struct cvec2 *into, struct cvec2 *from);
+CVEC2_EXPORT void cvec2_append_list(struct cvec2 *into, void *from, size_t len);
+
 // insert a value into a vector, preserving order,
 // at a specific index specified by whence
 CVEC2_EXPORT void cvec2_insert(struct cvec2 *vector, void *from, size_t whence);
@@ -84,6 +87,10 @@ CVEC2_EXPORT void cvec2_insert(struct cvec2 *vector, void *from, size_t whence);
 // faster than regular insert
 CVEC2_EXPORT void cvec2_insert_fast(struct cvec2 *vector, void *from,
                                     size_t whence);
+
+// TODO: unimplemented
+// CVEC2_EXPORT void cvec2_insert_vec(struct cvec2 *into, struct cvec2 *from,
+//                                    size_t whence);
 
 // remove a value at a specified location, preserving order
 CVEC2_EXPORT void cvec2_remove(struct cvec2 *vector, size_t whence);
@@ -183,6 +190,49 @@ CVEC2_EXPORT void cvec2_pop(struct cvec2 *vector, void *into) {
                  &vector->ptr[CVEC2_GET_BYTE_INDEX_OF(vector, vector->len - 1)],
                  vector->elem_size);
     vector->len -= 1;
+}
+
+CVEC2_EXPORT void cvec2_append(struct cvec2 *into, struct cvec2 *from) {
+    cvec2_grow(into, into->cap + from->cap);
+
+    for (size_t i = 0; i < from->len; i++) {
+        cvec2_memcpy(into->ptr + (i + into->len) * into->elem_size,
+                     from->ptr + i * into->elem_size, into->elem_size);
+    }
+
+    into->len += from->len;
+}
+
+CVEC2_EXPORT void cvec2_append_list(struct cvec2 *into, void *from,
+                                    size_t len) {
+    cvec2_grow(into, into->len + len);
+
+    for (size_t i = 0; i < len; i++) {
+        cvec2_memcpy(into->ptr + (i + into->len) * into->elem_size,
+                     &((uint8_t *)from)[i * into->elem_size], into->elem_size);
+    }
+
+    into->len += len;
+}
+
+CVEC2_EXPORT void cvec2_insert_vec(struct cvec2 *into, struct cvec2 *from,
+                                   size_t whence) {
+    const size_t elem_size = into->elem_size;
+
+    cvec2_grow(into, into->len + from->len);
+
+    for (size_t i = into->len - 1; i > whence; i--) {
+        void *from_ptr = into->ptr + i * elem_size;
+        void *into_ptr = into->ptr + (i + from->len) * elem_size;
+        cvec2_memcpy(into_ptr, from_ptr, elem_size);
+    }
+
+    for (size_t i = 0; i < from->len; i++) {
+        void *from_ptr = from->ptr + i * elem_size;
+        void *into_ptr = into->ptr + (i + whence) * elem_size;
+        cvec2_memcpy(into_ptr, from_ptr, elem_size);
+    }
+    into->len += from->len;
 }
 
 // must preserve order
